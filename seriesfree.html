@@ -1,0 +1,1780 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StreamVault — Encuentra tu Serie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080a0f;
+    --surface: #0e1118;
+    --card: #131822;
+    --card-hover: #1a2235;
+    --border: #1e2a3a;
+    --accent: #e63946;
+    --accent2: #ff6b35;
+    --accent-glow: rgba(230,57,70,0.3);
+    --text: #e8eaf0;
+    --text-muted: #6b7a99;
+    --text-dim: #3a4560;
+    --gold: #ffd166;
+    --green: #06d6a0;
+    --blue: #118ab2;
+    --purple: #7b2d8b;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  /* HEADER */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(8,10,15,0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', 'Impact', 'Arial Narrow', sans-serif;
+    font-size: 1.8rem;
+    letter-spacing: 0.05em;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-decoration: none;
+  }
+
+  .logo span {
+    color: var(--text-muted);
+    -webkit-text-fill-color: var(--text-dim);
+    font-size: 0.9rem;
+    font-family: 'DM Mono', 'Courier New', monospace;
+    letter-spacing: 0.2em;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+  }
+
+  nav {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+  }
+
+  nav a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.4rem 0.9rem;
+    border-radius: 6px;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+  }
+
+  nav a:hover, nav a.active {
+    color: var(--text);
+    background: var(--card);
+  }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    padding: 5rem 2rem 4rem;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  .hero-glow {
+    position: absolute;
+    top: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(230,57,70,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero h1 {
+    font-family: 'Bebas Neue', 'Impact', 'Arial Narrow', sans-serif;
+    font-size: clamp(3rem, 8vw, 6.5rem);
+    line-height: 0.95;
+    letter-spacing: 0.02em;
+    margin-bottom: 1.2rem;
+  }
+
+  .hero h1 .line1 { display: block; color: var(--text); }
+  .hero h1 .line2 {
+    display: block;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero p {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    max-width: 480px;
+    margin: 0 auto 2.5rem;
+    line-height: 1.65;
+  }
+
+  /* SEARCH BAR */
+  .search-container {
+    max-width: 680px;
+    margin: 0 auto 1.5rem;
+    position: relative;
+  }
+
+  .search-wrap {
+    display: flex;
+    align-items: center;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 0.5rem 0.5rem 0.5rem 1.2rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+
+  .search-wrap:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  .search-icon {
+    color: var(--text-muted);
+    margin-right: 0.8rem;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .search-wrap input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+    font-size: 1rem;
+    font-weight: 400;
+  }
+
+  .search-wrap input::placeholder { color: var(--text-dim); }
+
+  .btn-search {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 0.65rem 1.4rem;
+    font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn-search:hover { opacity: 0.9; transform: scale(1.02); }
+
+  /* FILTERS */
+  .filters {
+    max-width: 900px;
+    margin: 0 auto 4rem;
+    padding: 0 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    justify-content: center;
+  }
+
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.45rem 0.75rem;
+  }
+
+  .filter-group label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+
+  .filter-group select {
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    min-width: 120px;
+  }
+
+  .filter-group select option { background: var(--card); }
+
+  .tags-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    max-width: 900px;
+    margin: 0 auto 1.5rem;
+    padding: 0 2rem;
+  }
+
+  .tag {
+    padding: 0.4rem 1rem;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    color: var(--text-muted);
+    background: var(--card);
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+  }
+
+  .tag:hover, .tag.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(230,57,70,0.08);
+  }
+
+  .tag.all.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+    border-color: transparent;
+  }
+
+  /* SECTION TITLE */
+  .section-title {
+    max-width: 1400px;
+    margin: 0 auto 1.5rem;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .section-title h2 {
+    font-family: 'Bebas Neue', 'Impact', 'Arial Narrow', sans-serif;
+    font-size: 1.6rem;
+    letter-spacing: 0.05em;
+    color: var(--text);
+  }
+
+  .section-title h2 span {
+    color: var(--accent);
+  }
+
+  .view-all {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    transition: color 0.2s;
+  }
+  .view-all:hover { color: var(--accent); }
+
+  /* SERIES GRID */
+  .grid-container {
+    max-width: 1400px;
+    margin: 0 auto 3rem;
+    padding: 0 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 1.2rem;
+  }
+
+  .series-card {
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--card);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    animation: fadeIn 0.4s ease both;
+  }
+
+  @keyframes fadeIn {
+    from { opacity:0; transform: translateY(16px); }
+    to { opacity:1; transform: translateY(0); }
+  }
+
+  .series-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--accent);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px var(--accent-glow);
+  }
+
+  .card-poster {
+    width: 100%;
+    aspect-ratio: 2/3;
+    object-fit: cover;
+    display: block;
+    background: var(--surface);
+  }
+
+  .card-poster-placeholder {
+    width: 100%;
+    aspect-ratio: 2/3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    background: linear-gradient(135deg, var(--surface), var(--card));
+    color: var(--text-dim);
+  }
+
+  .card-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: var(--accent);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .card-badge.new { background: var(--green); color: #000; }
+  .card-badge.popular { background: var(--gold); color: #000; }
+  .card-badge.hd { background: var(--blue); }
+
+  .card-rating {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(4px);
+    border-radius: 6px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--gold);
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+  }
+
+  .card-info {
+    padding: 0.75rem;
+  }
+
+  .card-title {
+    font-weight: 600;
+    font-size: 0.88rem;
+    margin-bottom: 0.3rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text);
+  }
+
+  .card-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .card-genre {
+    background: var(--surface);
+    border-radius: 4px;
+    padding: 0.1rem 0.4rem;
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+
+  .card-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(8,10,15,0.95) 0%, rgba(8,10,15,0.3) 50%, transparent 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 1rem;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .series-card:hover .card-overlay { opacity: 1; }
+
+  .overlay-btns {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .btn-play {
+    flex: 1;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.6rem;
+    font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+    font-weight: 600;
+    font-size: 0.82rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    transition: opacity 0.2s;
+  }
+
+  .btn-play:hover { opacity: 0.9; }
+
+  .btn-info {
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    padding: 0.6rem 0.8rem;
+    font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .btn-info:hover { background: rgba(255,255,255,0.2); }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 950px;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: scale(0.95) translateY(20px);
+    transition: transform 0.3s;
+  }
+
+  .modal-overlay.open .modal { transform: scale(1) translateY(0); }
+
+  .modal::-webkit-scrollbar { width: 5px; }
+  .modal::-webkit-scrollbar-track { background: var(--surface); }
+  .modal::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .modal-hero {
+    position: relative;
+    height: 320px;
+    overflow: hidden;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .modal-backdrop {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(2px) brightness(0.5);
+  }
+
+  .modal-backdrop-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 5rem;
+    background: linear-gradient(135deg, #1a0a0a, #0a0a1a);
+  }
+
+  .modal-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, var(--card) 0%, transparent 60%);
+    display: flex;
+    align-items: flex-end;
+    padding: 2rem;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .modal-close:hover { background: var(--accent); border-color: transparent; }
+
+  .modal-title-area { width: 100%; }
+  .modal-series-title {
+    font-family: 'Bebas Neue', 'Impact', 'Arial Narrow', sans-serif;
+    font-size: 2.5rem;
+    letter-spacing: 0.03em;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+
+  .modal-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .modal-tag {
+    background: rgba(230,57,70,0.2);
+    color: var(--accent);
+    border: 1px solid rgba(230,57,70,0.3);
+    border-radius: 4px;
+    padding: 0.2rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .modal-body {
+    padding: 1.5rem 2rem 2rem;
+  }
+
+  .modal-meta {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .meta-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+  }
+
+  .meta-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .meta-value.rating { color: var(--gold); }
+  .meta-value.new { color: var(--green); }
+
+  .modal-desc {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.7;
+    margin-bottom: 2rem;
+    max-width: 680px;
+  }
+
+  /* VIDEO PLAYER */
+  .player-section {
+    background: #000;
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border);
+  }
+
+  .player-header {
+    background: var(--surface);
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: gap;
+    gap: 0.75rem;
+  }
+
+  .player-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .player-title .ep-badge {
+    background: var(--accent);
+    color: white;
+    font-size: 0.7rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-family: 'DM Mono', 'Courier New', monospace;
+  }
+
+  .player-controls-top {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  .res-selector {
+    display: flex;
+    gap: 0.3rem;
+  }
+
+  .res-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 5px;
+    padding: 0.25rem 0.6rem;
+    font-family: 'DM Mono', 'Courier New', monospace;
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .res-btn:hover, .res-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+
+  .video-wrapper {
+    position: relative;
+    padding-top: 56.25%;
+    background: #000;
+  }
+
+  .video-wrapper video, .video-wrapper iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .video-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    background: radial-gradient(ellipse at center, #1a0505 0%, #000 70%);
+  }
+
+  .play-big {
+    width: 72px;
+    height: 72px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 0 40px rgba(230,57,70,0.4);
+    border: none;
+    color: white;
+  }
+
+  .play-big:hover { transform: scale(1.1); box-shadow: 0 0 60px rgba(230,57,70,0.6); }
+
+  .now-playing-text {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-align: center;
+  }
+
+  .now-playing-text strong { color: var(--text); }
+
+  /* EPISODES */
+  .episodes-section { margin-bottom: 1.5rem; }
+
+  .episodes-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  .episodes-header h3 {
+    font-family: 'Bebas Neue', 'Impact', 'Arial Narrow', sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: 0.05em;
+  }
+
+  .season-tabs {
+    display: flex;
+    gap: 0.4rem;
+  }
+
+  .season-tab {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 7px;
+    padding: 0.35rem 0.9rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .season-tab:hover, .season-tab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+
+  .episodes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 280px;
+    overflow-y: auto;
+    padding-right: 0.3rem;
+  }
+
+  .episodes-list::-webkit-scrollbar { width: 4px; }
+  .episodes-list::-webkit-scrollbar-track { background: transparent; }
+  .episodes-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .episode-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .episode-row:hover, .episode-row.playing {
+    border-color: var(--accent);
+    background: rgba(230,57,70,0.05);
+  }
+
+  .episode-row.playing .ep-num { color: var(--accent); }
+
+  .ep-num {
+    font-family: 'DM Mono', 'Courier New', monospace;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    width: 32px;
+    flex-shrink: 0;
+    font-weight: 600;
+  }
+
+  .ep-details { flex: 1; min-width: 0; }
+  .ep-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0.2rem;
+  }
+
+  .ep-desc {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ep-duration {
+    font-family: 'DM Mono', 'Courier New', monospace;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+
+  .ep-actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-shrink: 0;
+  }
+
+  .ep-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 6px;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .ep-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .ep-btn.download:hover { border-color: var(--green); color: var(--green); }
+
+  .download-all-btn {
+    width: 100%;
+    margin-top: 0.75rem;
+    background: var(--surface);
+    border: 1.5px dashed var(--border);
+    color: var(--text-muted);
+    border-radius: 10px;
+    padding: 0.75rem;
+    font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .download-all-btn:hover {
+    border-color: var(--green);
+    color: var(--green);
+    background: rgba(6,214,160,0.05);
+    border-style: solid;
+  }
+
+  /* TRENDING STRIP */
+  .trending-strip {
+    background: linear-gradient(135deg, rgba(230,57,70,0.08), rgba(255,107,53,0.05));
+    border-top: 1px solid rgba(230,57,70,0.15);
+    border-bottom: 1px solid rgba(230,57,70,0.15);
+    padding: 1rem 2rem;
+    margin-bottom: 3rem;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .strip-scroll {
+    display: flex;
+    gap: 2rem;
+    animation: scrollStrip 25s linear infinite;
+    width: max-content;
+  }
+
+  @keyframes scrollStrip {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  .strip-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .strip-item:hover { color: var(--accent); }
+  .strip-item .num { color: var(--accent); font-weight: 700; font-family: 'DM Mono', 'Courier New', monospace; }
+  .strip-item .dot { color: var(--text-dim); font-size: 0.5rem; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+  }
+
+  footer span { color: var(--accent); }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .grid-container { grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 0.8rem; }
+    .modal-body { padding: 1rem 1.25rem 1.5rem; }
+    .modal-hero { height: 220px; }
+    nav { display: none; }
+    .modal-meta { gap: 1rem; }
+    .player-header { flex-direction: column; align-items: flex-start; }
+    .episode-row { gap: 0.6rem; }
+    .ep-actions { display: none; }
+  }
+
+  /* LOADING */
+  .skeleton {
+    background: linear-gradient(90deg, var(--card), var(--card-hover), var(--card));
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 8px;
+  }
+  @keyframes shimmer { from{background-position:200% 0} to{background-position:-200% 0} }
+
+  /* SEARCH HIGHLIGHT */
+  .highlight {
+    background: rgba(230,57,70,0.25);
+    color: var(--accent);
+    border-radius: 2px;
+    padding: 0 1px;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: var(--card);
+    border: 1px solid var(--green);
+    color: var(--green);
+    padding: 0.75rem 1.25rem;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transform: translateX(200%);
+    transition: transform 0.3s;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+  .toast.show { transform: translateX(0); }
+
+  .no-results {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-muted);
+  }
+  .no-results .icon { font-size: 3rem; margin-bottom: 1rem; }
+  .no-results h3 { font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="#" class="logo">StreamVault <span>▸ SERIES</span></a>
+  <nav>
+    <a href="#" class="active">Inicio</a>
+    <a href="#">Novedades</a>
+    <a href="#">Top 10</a>
+    <a href="#">Mi Lista</a>
+    <a href="#">Descargas</a>
+  </nav>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <h1>
+    <span class="line1">DESCUBRE TU</span>
+    <span class="line2">PRÓXIMA SERIE</span>
+  </h1>
+  <p>Miles de series en HD sin anuncios. Busca por nombre, año, género o explora las más populares del momento.</p>
+
+  <div class="search-container">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Buscar serie, actor, director..." autocomplete="off">
+      <button class="btn-search" onclick="doSearch()">Buscar</button>
+    </div>
+  </div>
+
+  <div class="filters">
+    <div class="filter-group">
+      <label>📅 Año</label>
+      <select id="filterYear" onchange="applyFilters()">
+        <option value="">Todos</option>
+        <option value="2025">2025</option>
+        <option value="2024">2024</option>
+        <option value="2023">2023</option>
+        <option value="2022">2022</option>
+        <option value="2021">2021</option>
+        <option value="2020">2020</option>
+        <option value="2010s">2010–2019</option>
+        <option value="2000s">2000–2009</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>⭐ Rating</label>
+      <select id="filterRating" onchange="applyFilters()">
+        <option value="">Todos</option>
+        <option value="9">9.0+</option>
+        <option value="8">8.0+</option>
+        <option value="7">7.0+</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>🎭 Estado</label>
+      <select id="filterStatus" onchange="applyFilters()">
+        <option value="">Todos</option>
+        <option value="ongoing">En emisión</option>
+        <option value="ended">Finalizada</option>
+        <option value="upcoming">Próximamente</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>🔢 Ordenar</label>
+      <select id="filterSort" onchange="applyFilters()">
+        <option value="popular">Más populares</option>
+        <option value="newest">Más recientes</option>
+        <option value="oldest">Más antiguas</option>
+        <option value="rating">Mejor puntuadas</option>
+        <option value="az">A-Z</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="tags-filter" id="tagFilters">
+    <button class="tag all active" onclick="filterByTag('all',this)">🌟 Todas</button>
+    <button class="tag" onclick="filterByTag('drama',this)">🎭 Drama</button>
+    <button class="tag" onclick="filterByTag('accion',this)">💥 Acción</button>
+    <button class="tag" onclick="filterByTag('comedia',this)">😄 Comedia</button>
+    <button class="tag" onclick="filterByTag('thriller',this)">🔪 Thriller</button>
+    <button class="tag" onclick="filterByTag('scifi',this)">🚀 Sci-Fi</button>
+    <button class="tag" onclick="filterByTag('fantasia',this)">🐉 Fantasía</button>
+    <button class="tag" onclick="filterByTag('terror',this)">👻 Terror</button>
+    <button class="tag" onclick="filterByTag('documental',this)">🎬 Documental</button>
+    <button class="tag" onclick="filterByTag('anime',this)">⛩️ Anime</button>
+    <button class="tag" onclick="filterByTag('crimen',this)">🕵️ Crimen</button>
+    <button class="tag" onclick="filterByTag('romance',this)">💕 Romance</button>
+  </div>
+</section>
+
+<!-- TRENDING STRIP -->
+<div class="trending-strip">
+  <div class="strip-scroll" id="stripScroll"></div>
+</div>
+
+<!-- GRID -->
+<div class="section-title">
+  <h2>Series <span id="gridSubtitle">Populares</span></h2>
+  <a href="#" class="view-all">Ver todas →</a>
+</div>
+
+<div class="grid-container" id="seriesGrid"></div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-hero">
+      <div class="modal-backdrop-placeholder" id="modalBg">🎬</div>
+      <div class="modal-hero-overlay">
+        <div class="modal-title-area">
+          <div class="modal-tags" id="modalTagsEl"></div>
+          <div class="modal-series-title" id="modalTitle">—</div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-meta" id="modalMeta"></div>
+      <p class="modal-desc" id="modalDesc">—</p>
+
+      <!-- VIDEO PLAYER -->
+      <div class="player-section">
+        <div class="player-header">
+          <div class="player-title">
+            ▶ <span id="nowPlayingLabel">Reproduciendo</span>
+            <span class="ep-badge" id="epBadge">S1 E1</span>
+          </div>
+          <div class="player-controls-top">
+            <div class="res-selector" id="resSel">
+              <button class="res-btn" onclick="setRes('480p',this)">480p</button>
+              <button class="res-btn active" onclick="setRes('720p',this)">720p</button>
+              <button class="res-btn" onclick="setRes('1080p',this)">1080p</button>
+              <button class="res-btn" onclick="setRes('4K',this)">4K</button>
+            </div>
+          </div>
+        </div>
+        <div class="video-wrapper">
+          <div class="video-placeholder" id="videoPlaceholder">
+            <button class="play-big" onclick="fakePlay()" id="playBigBtn">▶</button>
+            <div class="now-playing-text" id="nowPlayingText">
+              <strong>Selecciona un episodio</strong><br>y empieza a ver ahora mismo
+            </div>
+          </div>
+          <video id="videoPlayer" controls style="display:none; position:absolute; inset:0; width:100%; height:100%;">
+            Tu navegador no soporta HTML5 video.
+          </video>
+        </div>
+      </div>
+
+      <!-- EPISODES -->
+      <div class="episodes-section">
+        <div class="episodes-header">
+          <h3>Episodios</h3>
+          <div class="season-tabs" id="seasonTabs"></div>
+        </div>
+        <div class="episodes-list" id="episodesList"></div>
+        <button class="download-all-btn" onclick="downloadAll()">
+          ⬇️ Descargar temporada completa
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">✓ <span id="toastMsg">Acción completada</span></div>
+
+<footer>
+  <p>StreamVault &copy; 2025 — <span>Sin anuncios</span> · Solo series · Hecho con ❤️</p>
+</footer>
+
+<script>
+window.onerror = function(msg, src, line, col, err) {
+  document.body.innerHTML = '<div style="color:#e63946;font-family:Arial;padding:2rem;background:#080a0f;min-height:100vh;"><h2>⚠️ Error de carga</h2><pre style="color:#aaa;margin-top:1rem;font-size:0.8rem">' + msg + ' (línea ' + line + ')\n' + (err ? err.stack : '') + '</pre></div>';
+  return false;
+};
+
+// ─── DATA ───────────────────────────────────────────────────────────────────
+const SERIES = [
+  {
+    id:1, title:"Breaking Bad", year:2008, rating:9.5, genre:["drama","crimen","thriller"],
+    status:"ended", emoji:"⚗️",
+    desc:"Un profesor de química con cáncer terminal se convierte en fabricante de metanfetaminas junto a su exalumno para asegurar el futuro de su familia.",
+    seasons:5,
+    episodes:[
+      {season:1, ep:1, title:"Piloto", desc:"Walter White recibe un diagnóstico terminal.", dur:"58m"},
+      {season:1, ep:2, title:"El gato en el saco", desc:"Primeros pasos en el negocio.", dur:"48m"},
+      {season:1, ep:3, title:"... y el saco en el río", desc:"Complicaciones iniciales.", dur:"47m"},
+      {season:1, ep:4, title:"Cáncer", desc:"Walter decide continuar.", dur:"50m"},
+      {season:1, ep:5, title:"Gris", desc:"Tensión familiar.", dur:"49m"},
+      {season:1, ep:6, title:"Confucio", desc:"Walter y Jesse se adaptan.", dur:"51m"},
+      {season:1, ep:7, title:"Cuatro días fuera", desc:"El gran plan.", dur:"55m"},
+    ],
+    badge:"popular", color:"#2d6a4f"
+  },
+  {
+    id:2, title:"The Last of Us", year:2023, rating:8.8, genre:["drama","scifi","accion"],
+    status:"ongoing", emoji:"🍄",
+    desc:"Joel, un superviviente endurecido, debe cruzar una América post-apocalíptica con Ellie, una adolescente que podría ser la clave para salvar a la humanidad.",
+    seasons:2,
+    episodes:[
+      {season:1, ep:1, title:"Cuando tienes que perderte", desc:"El mundo colapsa.", dur:"81m"},
+      {season:1, ep:2, title:"Infectado", desc:"Joel y Ellie se encuentran.", dur:"55m"},
+      {season:1, ep:3, title:"Long Long Time", desc:"Bill y Frank.", dur:"76m"},
+      {season:1, ep:4, title:"Por favor, espérame", desc:"Kansas City.", dur:"46m"},
+      {season:1, ep:5, title:"Endure and Survive", desc:"Sam y Henry.", dur:"60m"},
+    ],
+    badge:"new", color:"#1a3a1a"
+  },
+  {
+    id:3, title:"Succession", year:2018, rating:8.9, genre:["drama","comedia"],
+    status:"ended", emoji:"🏢",
+    desc:"La disfuncional familia Roy pelea despiadadamente por el control de un imperio mediático multimillonario.",
+    seasons:4,
+    episodes:[
+      {season:1, ep:1, title:"Fiesta en la piscina", desc:"Presentación de la familia Roy.", dur:"55m"},
+      {season:1, ep:2, title:"Caballos en el campo", desc:"Logan anuncia su retiro.", dur:"55m"},
+      {season:1, ep:3, title:"Lifeboats", desc:"Kendall pide consejo.", dur:"55m"},
+    ],
+    badge:"popular", color:"#1a1a2e"
+  },
+  {
+    id:4, title:"Squid Game", year:2021, rating:8.0, genre:["thriller","drama","accion"],
+    status:"ongoing", emoji:"🦑",
+    desc:"Personas endeudadas compiten en juegos infantiles mortales para ganar un premio millonario en un impactante comentario sobre las desigualdades sociales.",
+    seasons:2,
+    episodes:[
+      {season:1, ep:1, title:"Red Light, Green Light", desc:"Los participantes son reclutados.", dur:"62m"},
+      {season:1, ep:2, title:"Hell", desc:"Las reglas del juego.", dur:"63m"},
+      {season:1, ep:3, title:"The Man with the Umbrella", desc:"Melgogi y alianzas.", dur:"56m"},
+    ],
+    badge:"new", color:"#2d0a1a"
+  },
+  {
+    id:5, title:"House of the Dragon", year:2022, rating:8.5, genre:["fantasia","drama","accion"],
+    status:"ongoing", emoji:"🐲",
+    desc:"La historia de la Casa Targaryen, ambientada 200 años antes de los eventos de Juego de Tronos, durante una guerra civil sangrienta por el Trono de Hierro.",
+    seasons:2,
+    episodes:[
+      {season:1, ep:1, title:"Los Herederos del Dragón", desc:"El rey Viserys nombra heredera.", dur:"66m"},
+      {season:1, ep:2, title:"El Nodo del Príncipe", desc:"Rhaenyra elige esposo.", dur:"56m"},
+    ],
+    badge:null, color:"#1a0a00"
+  },
+  {
+    id:6, title:"Severance", year:2022, rating:8.7, genre:["thriller","scifi","drama"],
+    status:"ongoing", emoji:"🧠",
+    desc:"Empleados de Lumon Industries aceptan una cirugía que separa su memoria laboral de la personal, con escalofriantes consecuencias.",
+    seasons:2,
+    episodes:[
+      {season:1, ep:1, title:"Buenas noticias sobre el infierno", desc:"Mark empieza en Lumon.", dur:"41m"},
+      {season:1, ep:2, title:"El buen señor", desc:"La superficie del corte.", dur:"42m"},
+    ],
+    badge:"popular", color:"#0a0a2a"
+  },
+  {
+    id:7, title:"The Bear", year:2022, rating:8.7, genre:["drama","comedia"],
+    status:"ongoing", emoji:"🍝",
+    desc:"Un chef de alta cocina regresa a Chicago para dirigir el sandwich shop de su familia tras una tragedia familiar, enfrentando caos culinario y trauma.",
+    seasons:3,
+    episodes:[
+      {season:1, ep:1, title:"System", desc:"Carmy llega a The Beef.", dur:"22m"},
+      {season:1, ep:2, title:"Hands", desc:"Primera noche.", dur:"29m"},
+      {season:1, ep:3, title:"Brigade", desc:"Renovación del menú.", dur:"30m"},
+    ],
+    badge:"new", color:"#1a0a00"
+  },
+  {
+    id:8, title:"Andor", year:2022, rating:8.4, genre:["accion","scifi","drama"],
+    status:"ongoing", emoji:"⭐",
+    desc:"La historia de Cassian Andor durante los años de formación de la Alianza Rebelde que busca derrocar al Imperio Galáctico.",
+    seasons:2,
+    episodes:[
+      {season:1, ep:1, title:"El cargo", desc:"Cassian busca información.", dur:"52m"},
+      {season:1, ep:2, title:"Esta es su victoria", desc:"El Imperio se acerca.", dur:"49m"},
+    ],
+    badge:null, color:"#0a0a1a"
+  },
+  {
+    id:9, title:"Shogun", year:2024, rating:9.0, genre:["drama","accion"],
+    status:"ended", emoji:"⚔️",
+    desc:"Un navegante inglés llega al Japón feudal del siglo XVII y queda atrapado en las intrigas políticas y militares de señores rivales.",
+    seasons:1,
+    episodes:[
+      {season:1, ep:1, title:"Crimson Sky", desc:"Blackthorne llega al Japón.", dur:"80m"},
+      {season:1, ep:2, title:"Crimson Sky — Continuación", desc:"Toranaga evalúa al piloto.", dur:"65m"},
+    ],
+    badge:"popular", color:"#1a0a0a"
+  },
+  {
+    id:10, title:"True Detective", year:2014, rating:9.0, genre:["thriller","crimen","drama"],
+    status:"ongoing", emoji:"🕵️",
+    desc:"Dos detectives opuestos investigan un macabro asesinato en Louisiana durante un período de 17 años lleno de secretos y obsesiones.",
+    seasons:4,
+    episodes:[
+      {season:1, ep:1, title:"El tiempo del largo plano", desc:"El caso del ciervo.", dur:"57m"},
+      {season:1, ep:2, title:"Incendios", desc:"La investigación avanza.", dur:"55m"},
+    ],
+    badge:null, color:"#0a0a0a"
+  },
+  {
+    id:11, title:"Dark", year:2017, rating:8.8, genre:["scifi","thriller","drama"],
+    status:"ended", emoji:"🌀",
+    desc:"La desaparición de unos niños en un pequeño pueblo alemán revela una conspiración que abarca varias generaciones interconectadas por un agujero de gusano.",
+    seasons:3,
+    episodes:[
+      {season:1, ep:1, title:"Beginnings and Endings", desc:"Año 2019. Winden en caos.", dur:"50m"},
+      {season:1, ep:2, title:"Lies", desc:"1986. Katarina investiga.", dur:"52m"},
+    ],
+    badge:null, color:"#050510"
+  },
+  {
+    id:12, title:"Shōgun (2024)", year:2024, rating:8.5, genre:["drama","accion","romance"],
+    status:"ongoing", emoji:"🏯",
+    desc:"Adaptación épica del clásico de James Clavell sobre choques culturales, honor y poder en el Japón feudal.",
+    seasons:1,
+    episodes:[
+      {season:1, ep:1, title:"Crimson Sky", desc:"Llegada de los bárbaros.", dur:"78m"},
+    ],
+    badge:"new", color:"#1a0500"
+  },
+  {
+    id:13, title:"One Piece (Live Action)", year:2023, rating:8.1, genre:["accion","fantasia","anime"],
+    status:"ongoing", emoji:"☠️",
+    desc:"Monkey D. Luffy y sus piratas navegan por el Gran Océano en busca del legendario tesoro One Piece.",
+    seasons:2,
+    episodes:[
+      {season:1, ep:1, title:"Romance Dawn", desc:"Luffy zarpa.", dur:"64m"},
+      {season:1, ep:2, title:"El Payaso de Oro", desc:"Bug el Payaso.", dur:"56m"},
+    ],
+    badge:"new", color:"#001a2a"
+  },
+  {
+    id:14, title:"Fallout", year:2024, rating:8.5, genre:["accion","scifi","comedia"],
+    status:"ongoing", emoji:"☢️",
+    desc:"En un futuro postapocalíptico, habitantes de búnkeres subterráneos salen al devastado yermo nuclear de los Estados Unidos.",
+    seasons:2,
+    episodes:[
+      {season:1, ep:1, title:"El Fin", desc:"El mundo antes del apocalipsis.", dur:"68m"},
+      {season:1, ep:2, title:"Hola", desc:"Lucy emerge del vault.", dur:"53m"},
+    ],
+    badge:"new", color:"#1a1000"
+  },
+  {
+    id:15, title:"Peaky Blinders", year:2013, rating:8.8, genre:["drama","crimen","accion"],
+    status:"ended", emoji:"🎩",
+    desc:"Una familia de gánsteres en Birmingham, Inglaterra, construye su imperio criminal tras la Primera Guerra Mundial.",
+    seasons:6,
+    episodes:[
+      {season:1, ep:1, title:"Piloto", desc:"Thomas Shelby controla las calles.", dur:"57m"},
+      {season:1, ep:2, title:"Episodio 2", desc:"La policía llega al pueblo.", dur:"55m"},
+    ],
+    badge:"popular", color:"#0a0500"
+  },
+  {
+    id:16, title:"Stranger Things", year:2016, rating:8.7, genre:["scifi","terror","drama"],
+    status:"ended", emoji:"🔦",
+    desc:"Un grupo de niños en los años 80 descubre un mundo paralelo oscuro llamado el Mundo del Revés, con criaturas aterradoras y experimentos secretos.",
+    seasons:5,
+    episodes:[
+      {season:1, ep:1, title:"Will desaparece", desc:"Will Byers desaparece.", dur:"47m"},
+      {season:1, ep:2, title:"El monstruo de las flores", desc:"El Demogorgon.", dur:"55m"},
+    ],
+    badge:null, color:"#050a15"
+  },
+  {
+    id:17, title:"The Crown", year:2016, rating:8.6, genre:["drama","romance"],
+    status:"ended", emoji:"👑",
+    desc:"La historia de la familia real británica desde el reinado de Isabel II, explorando los eventos políticos y personales que la definieron.",
+    seasons:6,
+    episodes:[
+      {season:1, ep:1, title:"Wolferton Splash", desc:"Jorge VI y su familia.", dur:"57m"},
+    ],
+    badge:null, color:"#1a1a00"
+  },
+  {
+    id:18, title:"The Boys", year:2019, rating:8.7, genre:["accion","comedia","thriller"],
+    status:"ongoing", emoji:"🦸",
+    desc:"En un mundo donde los superhéroes son celebridades corruptas controladas por megacorporaciones, un grupo de ciudadanos comunes decide plantar cara.",
+    seasons:4,
+    episodes:[
+      {season:1, ep:1, title:"The Name of the Game", desc:"Hughie conoce a Billy Butcher.", dur:"57m"},
+      {season:1, ep:2, title:"Cherry", desc:"Los Boys se forman.", dur:"55m"},
+    ],
+    badge:"popular", color:"#1a000a"
+  },
+  {
+    id:19, title:"Attack on Titan", year:2013, rating:9.0, genre:["anime","accion","drama"],
+    status:"ended", emoji:"⚡",
+    desc:"La humanidad lucha por sobrevivir dentro de enormes murallas que los protegen de titanes devoradores de humanos.",
+    seasons:4,
+    episodes:[
+      {season:1, ep:1, title:"Para ti, 2000 años después", desc:"La muralla exterior cae.", dur:"24m"},
+      {season:1, ep:2, title:"Ese día", desc:"Entrenamiento.", dur:"24m"},
+    ],
+    badge:"popular", color:"#0a0500"
+  },
+  {
+    id:20, title:"Beef", year:2023, rating:8.0, genre:["comedia","drama","thriller"],
+    status:"ended", emoji:"🚗",
+    desc:"Un accidente de tráfico menor entre dos desconocidos desencadena una espiral de venganza que destruye sus vidas y las de quienes los rodean.",
+    seasons:1,
+    episodes:[
+      {season:1, ep:1, title:"Empezamos mal el día", desc:"Danny y Amy se enfrentan.", dur:"37m"},
+    ],
+    badge:"new", color:"#0a1a0a"
+  },
+  {
+    id:21,
+    title:"Georgie & Mandy's First Marriage",
+    year:2024,
+    rating:7.1,
+    genre:["comedia","drama","romance"],
+    status:"ongoing",
+    emoji:"💍",
+    desc:"Spin-off de Young Sheldon. Georgie Cooper y Mandy McAllister — con 11 años de diferencia de edad — navegan los retos de la adultez, la crianza de su hija CeeCee y el matrimonio en el ficticio pueblo de Medford, Texas, durante los años 90. Protagonizada por Montana Jordan y Emily Osment.",
+    seasons:2,
+    episodes:[
+      // ── TEMPORADA 1 ─────────────────────────────────────────────────────
+      {season:1, ep:1,  title:"The 6:10 to Lubbock",                        desc:"Georgie y Mandy se hartan de vivir con los padres de ella y reconsideran su situación tras una pelea con Audrey.", dur:"22m"},
+      {season:1, ep:2,  title:"Some New York Nonsense",                      desc:"Georgie lucha por equilibrar vida, trabajo y familia; Mandy se preocupa por su bienestar; Missy se mete en problemas en la escuela.", dur:"22m"},
+      {season:1, ep:3,  title:"Secrets, Lies and a Chunk of Change",         desc:"Georgie descubre que Mandy oculta miles de dólares en deudas; Mandy intenta enmendarse volviendo a trabajar.", dur:"22m"},
+      {season:1, ep:4,  title:"Todd's Mom",                                  desc:"Las cosas se ponen incómodas cuando Georgie y Mandy intentan hacer nuevos amigos; Jim y Audrey se vuelven competitivos con Connor.", dur:"22m"},
+      {season:1, ep:5,  title:"Thanksgiving",                                desc:"Mandy lucha por reunir a la familia de Georgie en su primer Día de Acción de Gracias sin su padre.", dur:"22m"},
+      {season:1, ep:6,  title:"A Regular Samaritan",                         desc:"Georgie se une a una iglesia para vender neumáticos y Mandy sospecha que hay algo más detrás.", dur:"22m"},
+      {season:1, ep:7,  title:"An Old Mustang",                              desc:"Georgie teme dejar fuera a Connor de su nuevo proyecto con Jim; Mandy y Audrey pelean decorando el cuarto de CeeCee.", dur:"22m"},
+      {season:1, ep:8,  title:"Diet Crap",                                   desc:"Las tensiones crecen cuando Georgie se entromete en el nuevo trabajo de ventas de Mandy; Audrey se debate entre mimar o no a Connor.", dur:"22m"},
+      {season:1, ep:9,  title:"A Tire Convention and the Moral High Ground", desc:"Georgie descubre que el viaje anual de Jim a la convención de neumáticos no es lo que parece; Mandy duda de la fortaleza de su matrimonio.", dur:"22m"},
+      {season:1, ep:10, title:"Audrey and Mary Go to War",                   desc:"Audrey y Mary se enfrentan por CeeCee y Georgie; Mandy no puede evitar tomar partido.", dur:"22m"},
+      {season:1, ep:11, title:"Fred Fagenbacher",                            desc:"El pasado de Audrey sale a la luz cuando Georgie deja la tienda para trabajar con el archienemigo de Jim; Mandy intenta mantener la paz.", dur:"22m"},
+      {season:1, ep:12, title:"A Cold and a Calling",                        desc:"Georgie siente que falla a su familia cuando tiene que quedarse en casa con un resfriado; Mandy teme cómo su carrera afectará al matrimonio.", dur:"22m"},
+      {season:1, ep:13, title:"Jim Gets Ganged Up On",                       desc:"Jim se siente atacado cuando Georgie y Audrey hacen cambios en la tienda; Mandy ayuda a Georgie a mediar en una pelea entre sus suegros.", dur:"22m"},
+      {season:1, ep:14, title:"Meemaw's Sportsbook",                         desc:"Mandy descubre que Meemaw lleva una casa de apuestas ilegal y quiere participar; Georgie lucha por guardar el secreto.", dur:"22m"},
+      {season:1, ep:15, title:"Connor's Crush",                              desc:"Georgie ayuda a Connor a impresionar a su nuevo interés amoroso, mientras Mandy, Audrey y Jim luchan por no meterse.", dur:"22m"},
+      {season:1, ep:16, title:"Missy's New Boyfriend",                       desc:"El intento de Georgie de separar a Missy de su nuevo novio resulta contraproducente.", dur:"22m"},
+      {season:1, ep:17, title:"Mandy's Spending Habits",                     desc:"Mandy intenta demostrar ser responsable financieramente tras las críticas de Jim y Georgie; la novia de Connor necesita un lugar donde quedarse.", dur:"22m"},
+      {season:1, ep:18, title:"Meemaw and Jim",                              desc:"Mandy debe ayudar a Meemaw a cobrarle a su padre unas apuestas perdidas; Georgie intenta mediar entre su abuela y su suegro.", dur:"22m"},
+      {season:1, ep:19, title:"Mother's Day",                                desc:"Georgie intenta compaginar a su madre, su suegra y Mandy el Día de la Madre; Audrey quiere conocer a la novia de Connor.", dur:"22m"},
+      {season:1, ep:20, title:"Jim Sells the Store — Part 1",                desc:"Georgie entra en pánico al saber que Jim considera vender la tienda a su rival; Mandy se enfrenta a una mentira prolongada.", dur:"22m"},
+      {season:1, ep:21, title:"Jim Sells the Store — Part 2",                desc:"Las tensiones aumentan cuando Georgie descubre la verdad sobre el jefe de Mandy; Georgie hace todo lo posible para comprar la tienda antes de que Jim la venda.", dur:"22m"},
+      {season:1, ep:22, title:"A New Chapter",                               desc:"Georgie y Mandy enfrentan los cambios que trae la venta de la tienda y el comienzo de una nueva etapa familiar.", dur:"22m"},
+      // ── TEMPORADA 2 ─────────────────────────────────────────────────────
+      {season:2, ep:1,  title:"New Co-Owners",                               desc:"Surgen tensiones en la tienda cuando los nuevos copropietarios Georgie y Ruben descubren que no se ponen de acuerdo en nada; Jim lucha por encontrar su propósito tras jubilarse.", dur:"22m"},
+      {season:2, ep:2,  title:"The Weather Girl",                            desc:"Georgie se molesta cuando el nuevo rol de Mandy como chica del tiempo del fin de semana le atrae más atención masculina; Connor pide ayuda a Jim para tocar el órgano.", dur:"22m"},
+      {season:2, ep:3,  title:"Mary Starts Dating",                          desc:"Georgie tiene dificultades para aceptar que su madre retome las citas. Jim y Audrey enfrentan desafíos al redactar sus testamentos.", dur:"22m"},
+      {season:2, ep:4,  title:"Fred's Back",                                 desc:"Georgie y Ruben deben contraatacar cuando Fred Fagenbacher amenaza su negocio, mientras Mandy empieza a dudar de la honestidad de Georgie.", dur:"22m"},
+      {season:2, ep:5,  title:"The Overnight Trip",                          desc:"Los celos de Georgie salen a flote cuando Mandy es enviada de viaje de trabajo con su ex y actual jefe, Scott; Jim y Audrey entran en pánico al encontrar una prueba de embarazo en la basura de Connor.", dur:"22m"},
+      {season:2, ep:6,  title:"Connor's Rough Patch",                        desc:"Georgie, Mandy y la familia hacen todo lo posible por animar a Connor en un mal momento; Connor intenta encontrar un plan para su vida.", dur:"22m"},
+      {season:2, ep:7,  title:"Audrey and Mary's Rivalry Returns",           desc:"La rivalidad entre Audrey y Mary resurge cuando Georgie pide su ayuda en la tienda, mientras Jim se enfrenta a sus preocupaciones sobre el envejecimiento tras ir al DMV.", dur:"22m"},
+      {season:2, ep:8,  title:"CeeCee Gets Disciplined",                     desc:"Georgie y Mandy se molestan cuando Audrey disciplina a CeeCee sin su permiso.", dur:"22m"},
+      {season:2, ep:9,  title:"Payback and a Partial Shebang",               desc:"La pelea de Georgie con una tienda rival amenaza su sociedad con Ruben; Mandy descubre que Georgie le ha estado ocultando secretos.", dur:"22m"},
+      {season:2, ep:10, title:"Miami Beach and a Magical Family Christmas",  desc:"Georgie y Mandy malabares entre trabajo y familia cuando Audrey anuncia un viaje de Navidad sorpresa a Miami.", dur:"22m"},
+      {season:2, ep:11, title:"A New Hobby, a Pervert and a Part-Time Job",  desc:"Audrey y Mandy presionan a Jim para que encuentre un nuevo pasatiempo ahora que está jubilado y los tiene a todos locos.", dur:"22m"},
+    ],
+    badge:"new", color:"#1a0a2a"
+  },
+];
+
+let currentSeries = null;
+let currentSeason = 1;
+let currentRes = '720p';
+let activeTag = 'all';
+let activeYear = '';
+let activeRating = '';
+let activeStatus = '';
+let activeSort = 'popular';
+let searchQuery = '';
+let isPlaying = false;
+
+// ─── INIT ──────────────────────────────────────────────────────────────────
+function init() {
+  renderGrid(SERIES);
+  renderStrip();
+  document.getElementById('searchInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doSearch();
+  });
+  document.getElementById('searchInput').addEventListener('input', () => {
+    if (!document.getElementById('searchInput').value) {
+      searchQuery = '';
+      applyFilters();
+    }
+  });
+}
+
+function renderStrip() {
+  const trending = [...SERIES].sort((a,b) => b.rating - a.rating).slice(0,10);
+  const doubled = [...trending, ...trending];
+  const strip = document.getElementById('stripScroll');
+  strip.innerHTML = doubled.map((s,i) =>
+    `<div class="strip-item" onclick="openModal(${s.id})">
+      <span class="num">#${(i % 10) + 1}</span>
+      ${s.emoji} <strong>${s.title}</strong> (${s.year})
+      <span class="dot">◆</span>
+    </div>`
+  ).join('');
+}
+
+// ─── GRID ──────────────────────────────────────────────────────────────────
+function renderGrid(list) {
+  const grid = document.getElementById('seriesGrid');
+  if (!list.length) {
+    grid.innerHTML = `<div class="no-results">
+      <div class="icon">🔍</div>
+      <h3>Sin resultados</h3>
+      <p>Intenta con otros filtros o términos de búsqueda.</p>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = list.map((s, idx) => `
+    <div class="series-card" onclick="openModal(${s.id})" style="animation-delay:${idx * 0.04}s">
+      <div class="card-poster-placeholder" style="background:linear-gradient(135deg, ${s.color || '#1a1a2a'}, #080a0f)">${s.emoji}</div>
+      ${s.badge ? `<div class="card-badge ${s.badge}">${s.badge === 'new' ? '🆕 NUEVO' : s.badge === 'popular' ? '🔥 TOP' : s.badge}</div>` : ''}
+      <div class="card-rating">⭐ ${s.rating}</div>
+      <div class="card-overlay">
+        <div class="overlay-btns">
+          <button class="btn-play" onclick="openModal(${s.id}); event.stopPropagation()">▶ Ver</button>
+          <button class="btn-info" onclick="openModal(${s.id}); event.stopPropagation()">ℹ</button>
+        </div>
+      </div>
+      <div class="card-info">
+        <div class="card-title">${s.title}</div>
+        <div class="card-meta">
+          <span>${s.year}</span>
+          <span class="card-genre">${s.genre[0]}</span>
+          <span>${s.seasons} temp.</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ─── SEARCH & FILTER ───────────────────────────────────────────────────────
+function doSearch() {
+  searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+  applyFilters();
+}
+
+function filterByTag(tag, el) {
+  activeTag = tag;
+  document.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  applyFilters();
+}
+
+function applyFilters() {
+  activeYear   = document.getElementById('filterYear').value;
+  activeRating = document.getElementById('filterRating').value;
+  activeStatus = document.getElementById('filterStatus').value;
+  activeSort   = document.getElementById('filterSort').value;
+
+  let result = SERIES.filter(s => {
+    if (searchQuery && !s.title.toLowerCase().includes(searchQuery) &&
+        !s.desc.toLowerCase().includes(searchQuery)) return false;
+    if (activeTag !== 'all' && !s.genre.includes(activeTag)) return false;
+    if (activeYear) {
+      if (activeYear === '2010s' && (s.year < 2010 || s.year > 2019)) return false;
+      if (activeYear === '2000s' && (s.year < 2000 || s.year > 2009)) return false;
+      if (!isNaN(activeYear) && s.year !== parseInt(activeYear)) return false;
+    }
+    if (activeRating && s.rating < parseFloat(activeRating)) return false;
+    if (activeStatus && s.status !== activeStatus) return false;
+    return true;
+  });
+
+  result.sort((a,b) => {
+    if (activeSort === 'newest') return b.year - a.year;
+    if (activeSort === 'oldest') return a.year - b.year;
+    if (activeSort === 'rating') return b.rating - a.rating;
+    if (activeSort === 'az') return a.title.localeCompare(b.title);
+    return b.rating - a.rating;
+  });
+
+  // subtitle
+  const labels = {
+    'all':'Populares','drama':'Drama','accion':'Acción','comedia':'Comedia',
+    'thriller':'Thriller','scifi':'Sci-Fi','fantasia':'Fantasía',
+    'terror':'Terror','documental':'Documental','anime':'Anime',
+    'crimen':'Crimen','romance':'Romance'
+  };
+  document.getElementById('gridSubtitle').textContent =
+    searchQuery ? `"${searchQuery}"` : (labels[activeTag] || 'Todas');
+
+  renderGrid(result);
+}
+
+// ─── MODAL ─────────────────────────────────────────────────────────────────
+function openModal(id) {
+  currentSeries = SERIES.find(s => s.id === id);
+  if (!currentSeries) return;
+  isPlaying = false;
+
+  document.getElementById('modalBg').textContent = currentSeries.emoji;
+  document.getElementById('modalBg').style.background =
+    `linear-gradient(135deg, ${currentSeries.color || '#1a1a2a'}, #080a0f)`;
+  document.getElementById('modalTitle').textContent = currentSeries.title;
+
+  // tags
+  document.getElementById('modalTagsEl').innerHTML =
+    currentSeries.genre.map(g => `<span class="modal-tag">${g}</span>`).join('');
+
+  // meta
+  const statusMap = { ongoing:'🟢 En emisión', ended:'🔴 Finalizada', upcoming:'🟡 Próximamente' };
+  document.getElementById('modalMeta').innerHTML = `
+    <div class="meta-item"><span class="meta-label">Año</span><span class="meta-value">${currentSeries.year}</span></div>
+    <div class="meta-item"><span class="meta-label">Rating</span><span class="meta-value rating">⭐ ${currentSeries.rating}/10</span></div>
+    <div class="meta-item"><span class="meta-label">Temporadas</span><span class="meta-value">${currentSeries.seasons}</span></div>
+    <div class="meta-item"><span class="meta-label">Estado</span><span class="meta-value">${statusMap[currentSeries.status]}</span></div>
+  `;
+
+  document.getElementById('modalDesc').textContent = currentSeries.desc;
+
+  // reset player
+  resetPlayer();
+
+  // seasons
+  currentSeason = 1;
+  const seasons = [...new Set(currentSeries.episodes.map(e => e.season))];
+  document.getElementById('seasonTabs').innerHTML = seasons.map(s =>
+    `<button class="season-tab ${s===1?'active':''}" onclick="changeSeason(${s},this)">T${s}</button>`
+  ).join('');
+
+  renderEpisodes(1);
+
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function resetPlayer() {
+  const vid = document.getElementById('videoPlayer');
+  vid.style.display = 'none';
+  vid.src = '';
+  document.getElementById('videoPlaceholder').style.display = 'flex';
+  document.getElementById('nowPlayingText').innerHTML = '<strong>Selecciona un episodio</strong><br>y empieza a ver ahora mismo';
+  document.getElementById('epBadge').textContent = 'S1 E1';
+  document.getElementById('nowPlayingLabel').textContent = 'Reproduciendo';
+  isPlaying = false;
+}
+
+function renderEpisodes(season) {
+  const eps = currentSeries.episodes.filter(e => e.season === season);
+  document.getElementById('episodesList').innerHTML = eps.map(e => `
+    <div class="episode-row" id="ep-row-${e.season}-${e.ep}" onclick="playEpisode(${e.season},${e.ep})">
+      <span class="ep-num">E${String(e.ep).padStart(2,'0')}</span>
+      <div class="ep-details">
+        <div class="ep-name">${e.title}</div>
+        <div class="ep-desc">${e.desc}</div>
+      </div>
+      <span class="ep-duration">${e.dur}</span>
+      <div class="ep-actions">
+        <button class="ep-btn" onclick="playEpisode(${e.season},${e.ep}); event.stopPropagation()">▶ Ver</button>
+        <button class="ep-btn download" onclick="downloadEp(${e.season},${e.ep}); event.stopPropagation()">⬇</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function changeSeason(s, el) {
+  currentSeason = s;
+  document.querySelectorAll('.season-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderEpisodes(s);
+}
+
+function playEpisode(season, ep) {
+  const epData = currentSeries.episodes.find(e => e.season === season && e.ep === ep);
+  if (!epData) return;
+
+  document.querySelectorAll('.episode-row').forEach(r => r.classList.remove('playing'));
+  const row = document.getElementById(`ep-row-${season}-${ep}`);
+  if (row) row.classList.add('playing');
+
+  document.getElementById('epBadge').textContent = `S${season} E${ep}`;
+  document.getElementById('nowPlayingLabel').textContent = epData.title;
+
+  // Show fake player (in real app: set video src)
+  document.getElementById('videoPlaceholder').style.display = 'flex';
+  document.getElementById('nowPlayingText').innerHTML =
+    `<strong>${currentSeries.title}</strong><br>T${season} · ${epData.title} · ${currentRes}`;
+  document.getElementById('playBigBtn').textContent = '▶';
+  isPlaying = false;
+
+  // Scroll player into view
+  document.querySelector('.player-section').scrollIntoView({ behavior:'smooth', block:'nearest' });
+  showToast(`▶ Cargando: ${epData.title} (${currentRes})`);
+}
+
+function fakePlay() {
+  const btn = document.getElementById('playBigBtn');
+  isPlaying = !isPlaying;
+  btn.textContent = isPlaying ? '⏸' : '▶';
+  if (isPlaying) {
+    showToast('▶ Reproduciendo en ' + currentRes + ' sin anuncios');
+  }
+}
+
+function setRes(res, el) {
+  currentRes = res;
+  document.querySelectorAll('.res-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  if (isPlaying || document.getElementById('nowPlayingText').innerHTML.includes(currentSeries?.title || '__')) {
+    showToast('📺 Resolución: ' + res);
+  }
+}
+
+function downloadEp(season, ep) {
+  const epData = currentSeries?.episodes.find(e => e.season === season && e.ep === ep);
+  if (!epData) return;
+  showToast(`⬇️ Descargando: ${epData.title} (${currentRes})`);
+}
+
+function downloadAll() {
+  showToast(`⬇️ Preparando temporada ${currentSeason} completa...`);
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModalDirect();
+}
+
+function closeModalDirect() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  resetPlayer();
+}
+
+// ─── TOAST ─────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ─── KEYBOARD ──────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModalDirect();
+  if (e.key === ' ' && document.getElementById('modalOverlay').classList.contains('open')) {
+    e.preventDefault();
+    fakePlay();
+  }
+});
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
+</script>
+</body>
+</html>
